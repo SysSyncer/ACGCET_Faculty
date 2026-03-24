@@ -1,0 +1,204 @@
+<UserControl x:Class="ACGCET_Faculty.Views.MarkEntry.MyAuditLogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:ACGCET_Faculty.ViewModels.MarkEntry"
+             d:DataContext="{d:DesignInstance Type=vm:MyAuditLogViewModel}"
+             mc:Ignorable="d"
+             d:DesignHeight="700"
+             d:DesignWidth="1000"
+             Background="{DynamicResource MaterialDesign.Brush.Background}">
+
+    <Grid Margin="20 16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="180"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    Margin="0 0 0 14">
+            <md:PackIcon Kind="History"
+                         Width="26"
+                         Height="26"
+                         Foreground="#6A1B9A"
+                         VerticalAlignment="Center"
+                         Margin="0 0 10 0"/>
+            <TextBlock Text="My Audit Log"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="#4A148C"
+                       VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Filter Card -->
+        <md:Card Grid.Row="1"
+                 Margin="0 0 0 12"
+                 Padding="16 14"
+                 Background="White">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="160"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <DatePicker Grid.Column="0"
+                            Margin="0 0 10 0"
+                            SelectedDate="{Binding FromDate}"
+                            md:HintAssist.Hint="From Date"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                <DatePicker Grid.Column="1"
+                            Margin="0 0 10 0"
+                            SelectedDate="{Binding ToDate}"
+                            md:HintAssist.Hint="To Date"
+                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                <ComboBox Grid.Column="2"
+                          Margin="0 0 10 0"
+                          SelectedValue="{Binding FilterTable}"
+                          SelectedValuePath="Content"
+                          md:HintAssist.Hint="Filter by Table"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                    <ComboBoxItem Content="All"
+                                  IsSelected="True"/>
+                    <ComboBoxItem Content="InternalMarks"/>
+                    <ComboBoxItem Content="ExternalMarks"/>
+                    <ComboBoxItem Content="ExamApplications"/>
+                </ComboBox>
+                <Button Grid.Column="3"
+                        Command="{Binding LoadCommand}"
+                        Style="{StaticResource MaterialDesignFlatAccentBgButton}"
+                        Background="#FF673AB7"
+                        Foreground="White"
+                        BorderBrush="#FF673AB7"
+                        Height="40">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon Kind="Magnify"
+                                     VerticalAlignment="Center"
+                                     Margin="0 0 6 0"/>
+                        <TextBlock Text="Search"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </md:Card>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="2"
+                   Text="{Binding StatusMsg}"
+                   Foreground="#7B1FA2"
+                   FontSize="12"
+                   Margin="0 0 0 10"/>
+
+        <!-- Audit DataGrid -->
+        <md:Card Grid.Row="3"
+                 Background="White"
+                 Margin="0 0 0 16"
+                 ClipToBounds="True">
+            <DataGrid ItemsSource="{Binding AuditEntries}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserReorderColumns="False"
+                      HeadersVisibility="Column"
+                      Style="{StaticResource MaterialDesignDataGrid}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Date / Time"
+                                        Width="145"
+                                        Binding="{Binding ActionDate, StringFormat='{}{0:dd/MM/yyyy HH:mm:ss}'}"/>
+                    <DataGridTextColumn Header="Action"
+                                        Width="95"
+                                        Binding="{Binding ActionType}"/>
+                    <DataGridTextColumn Header="Table"
+                                        Width="130"
+                                        Binding="{Binding TableName}"/>
+                    <DataGridTextColumn Header="Record ID"
+                                        Width="90"
+                                        Binding="{Binding RecordId}"/>
+                    <DataGridTextColumn Header="Old Value"
+                                        Width="160"
+                                        Binding="{Binding OldValue}"/>
+                    <DataGridTextColumn Header="New Value"
+                                        Width="160"
+                                        Binding="{Binding NewValue}"/>
+                    <DataGridTextColumn Header="Description"
+                                        Width="*"
+                                        Binding="{Binding Description}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </md:Card>
+
+        <!-- Anomaly header -->
+        <Border Grid.Row="4"
+                Margin="0 0 0 8"
+                Visibility="{Binding HasAnomalies,
+                             Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel Orientation="Horizontal">
+                <md:PackIcon Kind="AlertOctagon"
+                             Foreground="#C62828"
+                             Width="18"
+                             Height="18"
+                             VerticalAlignment="Center"
+                             Margin="0 0 8 0"/>
+                <TextBlock Text="Anomaly Detection Flags on Your Account"
+                           FontSize="13"
+                           FontWeight="Bold"
+                           Foreground="#B71C1C"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Anomaly DataGrid -->
+        <md:Card Grid.Row="5"
+                 ClipToBounds="True"
+                 Visibility="{Binding HasAnomalies,
+                              Converter={StaticResource BooleanToVisibilityConverter}}">
+            <DataGrid ItemsSource="{Binding AnomalyFlags}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      CanUserReorderColumns="False"
+                      HeadersVisibility="Column"
+                      Style="{StaticResource MaterialDesignDataGrid}">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow"
+                           BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                        <Setter Property="Background">
+                            <Setter.Value>
+                                <SolidColorBrush Color="#FFEBEE"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.RowStyle>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Detected At"
+                                        Width="140"
+                                        Binding="{Binding DetectionDateTime, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"/>
+                    <DataGridTextColumn Header="Type"
+                                        Width="160"
+                                        Binding="{Binding DetectionType}"/>
+                    <DataGridTextColumn Header="Table"
+                                        Width="120"
+                                        Binding="{Binding TargetTable}"/>
+                    <DataGridTextColumn Header="Severity"
+                                        Width="90"
+                                        Binding="{Binding SeverityLevel}"/>
+                    <DataGridTextColumn Header="Reason"
+                                        Width="*"
+                                        Binding="{Binding DetectionReason}"/>
+                    <DataGridTextColumn Header="Investigated"
+                                        Width="110"
+                                        Binding="{Binding IsInvestigated}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </md:Card>
+    </Grid>
+</UserControl>

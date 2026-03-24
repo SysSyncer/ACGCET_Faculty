@@ -1,0 +1,187 @@
+<UserControl x:Class="ACGCET_Faculty.Views.Reports.MissingMarksView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:ACGCET_Faculty.ViewModels.Reports"
+             d:DataContext="{d:DesignInstance Type=vm:MissingMarksViewModel}"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1000"
+             Background="{DynamicResource MaterialDesign.Brush.Background}">
+
+    <Grid Margin="20 16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 0 14">
+            <md:PackIcon Kind="ClipboardAlert" Width="26" Height="26"
+                         Foreground="#6A1B9A" VerticalAlignment="Center"
+                         Margin="0 0 10 0"/>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Missing Marks Report" FontSize="20"
+                           FontWeight="Bold" Foreground="#4A148C"/>
+                <TextBlock Text="Identify students with incomplete internal mark entries"
+                           FontSize="11" Foreground="#9E9E9E"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Filter Card -->
+        <md:Card Grid.Row="1" Margin="0 0 0 12" 
+                  Padding="16 14"
+                 Background="White">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ComboBox Grid.Column="0" Margin="0 0 10 0"
+                          ItemsSource="{Binding Courses}"
+                          SelectedItem="{Binding SelectedCourse}"
+                          md:HintAssist.Hint="Course / Dept"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          DisplayMemberPath="CourseName"/>
+                <ComboBox Grid.Column="1" Margin="0 0 10 0"
+                          ItemsSource="{Binding Batches}"
+                          SelectedItem="{Binding SelectedBatch}"
+                          md:HintAssist.Hint="Batch"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          DisplayMemberPath="BatchName"/>
+                <ComboBox Grid.Column="2" Margin="0 0 10 0"
+                          ItemsSource="{Binding Sections}"
+                          SelectedItem="{Binding SelectedSection}"
+                          md:HintAssist.Hint="Section"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          DisplayMemberPath="SectionName"/>
+                <ComboBox Grid.Column="3" Margin="0 0 10 0"
+                          ItemsSource="{Binding Semesters}"
+                          SelectedItem="{Binding SelectedSemester}"
+                          md:HintAssist.Hint="Sem"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                <Button Grid.Column="4"
+                        Command="{Binding GenerateReportCommand}"
+                        Style="{StaticResource MaterialDesignRaisedButton}"
+                         Height="40">
+                    <StackPanel Orientation="Horizontal">
+                        <md:PackIcon Kind="Magnify" VerticalAlignment="Center"
+                                     Margin="0 0 6 0"/>
+                        <TextBlock Text="Generate Report" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </md:Card>
+
+        <!-- Status / Summary -->
+        <Border Grid.Row="2"  Padding="12 8" Margin="0 0 0 10"
+                BorderThickness="1"
+                Visibility="{Binding StatusMessage,
+                             Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border.Background>
+                <SolidColorBrush Color="{Binding StatusColor}" Opacity="0.08"/>
+            </Border.Background>
+            <Border.BorderBrush>
+                <SolidColorBrush Color="{Binding StatusColor}" Opacity="0.3"/>
+            </Border.BorderBrush>
+            <StackPanel Orientation="Horizontal">
+                <md:PackIcon Kind="InformationOutline" Width="16" Height="16"
+                             Foreground="{Binding StatusColor}"
+                             VerticalAlignment="Center" Margin="0 0 8 0"/>
+                <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{Binding StatusColor}"
+                           FontSize="12" FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Results DataGrid -->
+        <md:Card Grid.Row="3" 
+                  ClipToBounds="True"
+                 Background="White">
+            <Grid>
+                <!-- Loading overlay -->
+                <Border Panel.ZIndex="10"  Background="#F5F5F5"
+                        Visibility="{Binding IsLoading,
+                                     Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}"
+                                     IsIndeterminate="True" Value="0"
+                                     Width="44" Height="44"/>
+                        <TextBlock Text="Analysing marks..." Foreground="#7B1FA2"
+                                   FontSize="13" HorizontalAlignment="Center"
+                                   Margin="0 12 0 0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Empty state -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Margin="0 40">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasResults}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <md:PackIcon Kind="ClipboardTextOutline" Width="64" Height="64"
+                                 Foreground="#BDBDBD" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Select filters and click Generate Report"
+                               Foreground="#9E9E9E" FontSize="14"
+                               HorizontalAlignment="Center" Margin="0 12 0 4"/>
+                    <TextBlock Text="Missing mark entries will be listed here"
+                               Foreground="#BDBDBD" FontSize="12"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Results Grid -->
+                <DataGrid ItemsSource="{Binding MissingMarks}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          CanUserAddRows="False" CanUserReorderColumns="False"
+                          HeadersVisibility="Column"
+                          Style="{StaticResource MaterialDesignDataGrid}"
+                          Visibility="{Binding HasResults,
+                                       Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                            <Setter Property="Background" Value="#FFFDE7"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#"            Width="55"
+                            Binding="{Binding RollNumber}"/>
+                        <DataGridTextColumn Header="Reg No"       Width="115"
+                            Binding="{Binding RegistrationNumber}"/>
+                        <DataGridTextColumn Header="Student Name"  Width="*"
+                            Binding="{Binding FullName}"/>
+                        <DataGridTextColumn Header="Paper Code"    Width="100"
+                            Binding="{Binding PaperCode}"/>
+                        <DataGridTextColumn Header="Paper Name"    Width="220"
+                            Binding="{Binding PaperName}"/>
+                        <DataGridTemplateColumn Header="Missing Tests" Width="200">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#FFF3E0" 
+                                            Padding="6 3" Margin="2">
+                                        <TextBlock Text="{Binding MissingTests}"
+                                                   Foreground="#E65100" FontSize="11"
+                                                   FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </md:Card>
+    </Grid>
+</UserControl>

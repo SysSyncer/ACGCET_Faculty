@@ -1,0 +1,62 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'   # Trigger on tags like v1.0.0, v1.2.3
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Inject connection string into source
+        shell: bash
+        run: |
+          sed -i "s|##DB_CONNECTION_STRING##|${{ secrets.DB_CONNECTION_STRING }}|g" \
+            Services/AppSecrets.cs
+
+      - name: Restore dependencies
+        run: dotnet restore ACGCET_Faculty.sln
+
+      - name: Publish (self-contained single-file exe)
+        run: >
+          dotnet publish ACGCET_Faculty.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
+          -o publish/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "ACGCET Faculty ${{ github.ref_name }}"
+          body: |
+            ## ACGCET Faculty ${{ github.ref_name }}
+
+            ### Installation
+            1. Download `ACGCET_Faculty.exe` below
+            2. Place it anywhere on your machine
+            3. Double-click to run — no installation required
+
+            ### Requirements
+            - Windows 10/11 (x64)
+            - Network access to the institution's database server
+          files: publish/ACGCET_Faculty.exe
+          fail_on_unmatched_files: true

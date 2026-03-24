@@ -1,0 +1,37 @@
+<Window x:Class="ACGCET_Faculty.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:vmDash="clr-namespace:ACGCET_Faculty.ViewModels.Dashboard"
+        xmlns:vDash="clr-namespace:ACGCET_Faculty.Views.Dashboard"
+        Title="ACGCET Faculty — Mark Entry System"
+        Icon="pack://application:,,,/Resources/Images/acgcet_logo.ico"
+        MinWidth="1100"
+        MinHeight="680"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        Background="White"
+        TextElement.Foreground="{DynamicResource MaterialDesign.Brush.Foreground}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Window.Resources>
+        <!--
+            DataTemplates: ViewModel type → View
+            ContentControl in the Grid below reads these automatically.
+        -->
+        <DataTemplate DataType="{x:Type vmDash:LoginViewModel}">
+            <vDash:LoginView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmDash:FacultyDashboardViewModel}">
+            <vDash:FacultyDashboardView/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid Background="White">
+        <ContentControl Content="{Binding CurrentView}"/>
+    </Grid>
+</Window>
