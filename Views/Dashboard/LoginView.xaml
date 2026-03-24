@@ -128,11 +128,11 @@
                                 <md:PackIcon Kind="Eye"
                                              Width="20"
                                              Height="20"
-                                             Visibility="{Binding IsPasswordVisible, Converter={StaticResource InverseBTV}}"/>
+                                             Visibility="{Binding IsPasswordVisible, Converter={StaticResource BTV}}"/>
                                 <md:PackIcon Kind="EyeOff"
                                              Width="20"
                                              Height="20"
-                                             Visibility="{Binding IsPasswordVisible, Converter={StaticResource BTV}}"/>
+                                             Visibility="{Binding IsPasswordVisible, Converter={StaticResource InverseBTV}}"/>
                             </Grid>
                         </Button>
                     </Grid>
@@ -144,19 +144,20 @@
                             BorderBrush="#FECACA"
                             Background="#FEF2F2"
                             Visibility="{Binding IsErrorVisible, Converter={StaticResource BTV}}">
-                        <StackPanel Orientation="Horizontal">
+                        <DockPanel>
                             <md:PackIcon Kind="AlertCircleOutline"
                                          Foreground="#C62828"
                                          Width="18"
                                          Height="18"
-                                         VerticalAlignment="Center"
-                                         Margin="0 0 8 0"/>
+                                         VerticalAlignment="Top"
+                                         Margin="0 2 8 0"
+                                         DockPanel.Dock="Left"/>
                             <TextBlock Text="{Binding ErrorMessage}"
                                        Foreground="#B71C1C"
                                        FontSize="13"
                                        TextWrapping="Wrap"
                                        VerticalAlignment="Center"/>
-                        </StackPanel>
+                        </DockPanel>
                     </Border>
 
                     <!-- Sign In Button -->

@@ -116,7 +116,15 @@ namespace ACGCET_Faculty.ViewModels.Dashboard
             }
             catch (Exception ex)
             {
-                SetError($"Login error: {ex.Message}");
+                var fullMsg = ex.Message;
+                var inner = ex.InnerException;
+                while (inner != null)
+                {
+                    fullMsg += " → " + inner.Message;
+                    inner = inner.InnerException;
+                }
+                System.Diagnostics.Debug.WriteLine($"LOGIN EXCEPTION: {ex}");
+                SetError($"Login error: {fullMsg}");
             }
             finally
             {
