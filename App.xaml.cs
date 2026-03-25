@@ -21,8 +21,8 @@ namespace ACGCET_Faculty
                 _host = Host.CreateDefaultBuilder()
                     .ConfigureAppConfiguration((context, config) =>
                     {
-                        config.SetBasePath(Directory.GetCurrentDirectory());
-                        config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                        config.SetBasePath(AppContext.BaseDirectory);
+                        config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
                     })
                     .ConfigureServices((context, services) =>
                     {

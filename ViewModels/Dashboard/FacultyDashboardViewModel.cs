@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ACGCET_Faculty.Messages;
 using ACGCET_Faculty.Models;
@@ -27,6 +28,13 @@ namespace ACGCET_Faculty.ViewModels.Dashboard
     {
         private readonly FacultyDbContext _db;
         private readonly AdminUser _currentUser;
+
+        /// <summary>
+        /// Canceled on every navigation to abort in-flight DB queries from the
+        /// previous page.  Prevents "A second operation was started on this context"
+        /// when the user switches views while a page is still loading.
+        /// </summary>
+        private CancellationTokenSource _navCts = new();
 
         // ─── Navigation ─────────────────────────────────────────────────
         [ObservableProperty] private object? _currentView;
@@ -68,7 +76,9 @@ namespace ACGCET_Faculty.ViewModels.Dashboard
 
         public async Task InitializeAsync()
         {
-            await LoadDashboardAsync();
+            await _db.DbLock.WaitAsync();
+            try { await LoadDashboardAsync(); }
+            finally { _db.DbLock.Release(); }
         }
 
         private async Task LoadDashboardAsync()
@@ -109,7 +119,7 @@ namespace ACGCET_Faculty.ViewModels.Dashboard
                         && (l.ExaminationId == null || l.ExaminationId == latestExamId));
 
                 IsInternalMarkOpen = !locked;
-                InternalMarkStatus = locked ? "🔒  LOCKED by COE" : "🟢  OPEN for Entry";
+                InternalMarkStatus = locked ? "LOCKED by COE" : "OPEN for Entry";
                 InternalMarkStatusColor = locked ? "#F44336" : "#4CAF50";
             }
             catch
@@ -145,7 +155,7 @@ namespace ACGCET_Faculty.ViewModels.Dashboard
                         && (l.ExaminationId == null || l.ExaminationId == latestExamId));
 
                 IsExamAppOpen = !locked;
-                ExamAppStatus = locked ? "🔒  LOCKED by COE" : "🟢  OPEN for Entry";
+                ExamAppStatus = locked ? "LOCKED by COE" : "OPEN for Entry";
                 ExamAppStatusColor = locked ? "#F44336" : "#4CAF50";
             }
             catch
@@ -196,47 +206,63 @@ namespace ACGCET_Faculty.ViewModels.Dashboard
         [RelayCommand]
         private async Task NavigateTo(string destination)
         {
-            switch (destination)
+            // Cancel any in-flight DB work from the previous page
+            _navCts.Cancel();
+            _navCts.Dispose();
+            _navCts = new CancellationTokenSource();
+            var ct = _navCts.Token;
+
+            // Wait for any pending DB operation to finish before starting a new one
+            await _db.DbLock.WaitAsync(ct);
+            try
             {
-                case "Home":
-                    await LoadDashboardAsync();
-                    CurrentView = this;
-                    break;
-                case "InternalMarkEntry":
-                    var imVm = new InternalMarkEntryViewModel(_db, _currentUser);
-                    CurrentView = imVm;
-                    await imVm.InitializeAsync();
-                    break;
-                case "MyAuditLog":
-                    var alVm = new MyAuditLogViewModel(_db, _currentUser);
-                    CurrentView = alVm;
-                    await alVm.InitializeAsync();
-                    break;
-                case "StudentMaster":
-                    var smVm = new ACGCET_Faculty.ViewModels.StudentMaster.StudentMasterViewModel(_db);
-                    CurrentView = smVm;
-                    await smVm.InitializeAsync();
-                    break;
-                case "MarksEntry":
-                    var meVm = new MarksEntryViewModel(_db, _currentUser);
-                    CurrentView = meVm;
-                    await meVm.InitializeAsync();
-                    break;
-                case "Results":
-                    var rVm = new ResultsViewModel(_db, _currentUser);
-                    CurrentView = rVm;
-                    await rVm.InitializeAsync();
-                    break;
-                case "ExamApplication":
-                    var eaVm = new ExamApplicationViewModel(_db, _currentUser);
-                    CurrentView = eaVm;
-                    await eaVm.InitializeAsync();
-                    break;
-                case "MissingMarks":
-                    var mmVm = new MissingMarksViewModel(_db);
-                    CurrentView = mmVm;
-                    await mmVm.InitializeAsync();
-                    break;
+                switch (destination)
+                {
+                    case "Home":
+                        CurrentView = this;
+                        await LoadDashboardAsync();
+                        break;
+                    case "InternalMarkEntry":
+                        var imVm = new InternalMarkEntryViewModel(_db, _currentUser);
+                        CurrentView = imVm;
+                        await imVm.InitializeAsync();
+                        break;
+                    case "MyAuditLog":
+                        var alVm = new MyAuditLogViewModel(_db, _currentUser);
+                        CurrentView = alVm;
+                        await alVm.InitializeAsync();
+                        break;
+                    case "StudentMaster":
+                        var smVm = new ACGCET_Faculty.ViewModels.StudentMaster.StudentMasterViewModel(_db);
+                        CurrentView = smVm;
+                        await smVm.InitializeAsync();
+                        break;
+                    case "MarksEntry":
+                        var meVm = new MarksEntryViewModel(_db, _currentUser);
+                        CurrentView = meVm;
+                        await meVm.InitializeAsync();
+                        break;
+                    case "Results":
+                        var rVm = new ResultsViewModel(_db, _currentUser);
+                        CurrentView = rVm;
+                        await rVm.InitializeAsync();
+                        break;
+                    case "ExamApplication":
+                        var eaVm = new ExamApplicationViewModel(_db, _currentUser);
+                        CurrentView = eaVm;
+                        await eaVm.InitializeAsync();
+                        break;
+                    case "MissingMarks":
+                        var mmVm = new MissingMarksViewModel(_db);
+                        CurrentView = mmVm;
+                        await mmVm.InitializeAsync();
+                        break;
+                }
+            }
+            catch (OperationCanceledException) { /* navigation was superseded */ }
+            finally
+            {
+                _db.DbLock.Release();
             }
         }
 
@@ -249,7 +275,9 @@ namespace ACGCET_Faculty.ViewModels.Dashboard
         [RelayCommand]
         private async Task Refresh()
         {
-            await LoadDashboardAsync();
+            await _db.DbLock.WaitAsync();
+            try { await LoadDashboardAsync(); }
+            finally { _db.DbLock.Release(); }
         }
     }
 }
