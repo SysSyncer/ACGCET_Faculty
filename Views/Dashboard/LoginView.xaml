@@ -62,7 +62,7 @@
                                        FontWeight="Bold"
                                        Foreground="#7C3AED"
                                        FontFamily="Segoe UI Variable Display, Segoe UI"/>
-                            <TextBlock Text="Faculty Portal"
+                            <TextBlock Text="Faculty App"
                                        FontSize="12"
                                        Foreground="#71717A"
                                        FontFamily="Segoe UI Variable Display, Segoe UI"/>
@@ -239,15 +239,6 @@
                            FontSize="14"
                            Foreground="#CCFFFFFF"
                            Margin="0 10 0 0"/>
-                <Rectangle Height="2"
-                           Width="120"
-                           HorizontalAlignment="Left"
-                           Fill="#994A148C"
-                           Margin="0 16 0 16"/>
-                <TextBlock Text="Integrity  ·  Industry  ·  Enterprise"
-                           FontSize="12"
-                           Foreground="#AAFFFFFF"
-                           FontStyle="Italic"/>
             </StackPanel>
         </Grid>
     </Grid>

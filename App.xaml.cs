@@ -37,7 +37,11 @@ namespace ACGCET_Faculty
                         // Singleton DbContext shared across Faculty session — one user, one context.
                         // All navigation ViewModels receive the same context instance from DI.
                         services.AddDbContext<FacultyDbContext>(options =>
-                            options.UseSqlServer(cs),
+                            options.UseSqlServer(cs,
+                                sql => sql.EnableRetryOnFailure(
+                                    maxRetryCount: 3,
+                                    maxRetryDelay: TimeSpan.FromSeconds(5),
+                                    errorNumbersToAdd: null)),
                             contextLifetime: Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton,
                             optionsLifetime: Microsoft.Extensions.DependencyInjection.ServiceLifetime.Singleton);
 
